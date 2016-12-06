@@ -9,7 +9,7 @@
 #include <iostream>
 #include <string>
   
-	    //FIXME compile error
+	    //F IXME compile error
             /*NNetwork::NNetwork(int iscount, int oscount, int midcount, int layers) 
             {
                 srand(time(0));
