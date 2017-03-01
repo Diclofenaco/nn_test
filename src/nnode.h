@@ -45,6 +45,9 @@ private:
     unsigned m_myIndex;
     double m_outputVal;
     double m_gradient; 
+
+private:    
+    
     Connections m_outputWeights;
 };
 

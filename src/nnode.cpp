@@ -58,3 +58,4 @@ void NNode::updateInputWeights(Layer &prevLayer)
 }
 
 
+

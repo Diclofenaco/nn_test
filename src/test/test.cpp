@@ -1,7 +1,10 @@
 #include "../nnetwork.h"
 #include "../train_set_io.h"
 
+#include <algorithm>
 #include <vector>
+#include <cstdlib>
+#include <bitset>
 
 /*
 void test_infrastructure()
@@ -24,6 +27,15 @@ void test_infrastructure()
 }
 */
 
+void showVectorVals(std::string label, std::vector<int> v)
+{
+    std::cout << label << " ";
+    for (unsigned i = 0; i < v.size(); ++i)
+        std::cout << v[i] << " ";
+
+    std::cout << std::endl;
+}
+
 void showVectorVals(std::string label, Vals v)
 {
     std::cout << label << " ";
@@ -33,127 +45,190 @@ void showVectorVals(std::string label, Vals v)
     std::cout << std::endl;
 }
 
-
-void test_learning() {
-    TrainingData trainData("src/test/data/out_xor.txt");
-    // TrainingData trainData("src/test/data/out_and.txt");
-    // TrainingData trainData("src/test/data/out_or.txt");
-    // TrainingData trainData("src/test/data/out_no.txt");
-    std::vector<unsigned> topology;
-    trainData.getTopology(topology);
-
-    //NNetwork myNet(topology[0],topology[2],topology[0],topology[1]);
-
-    NNetwork myNet(topology);
-
-    std::vector<float> inputVals, targetVals;
-    int trainingPass = 0;
-
-    while (!trainData.isEof()) 
-    {
-        if (trainData.getNextInputs(inputVals) != topology[0])
-            break;
-
-        ++trainingPass;
-        std::cout << std::endl << "Pass " << trainingPass << std::endl;
-
-        showVectorVals("Inputs:", inputVals);
-
-        trainData.getTargetOutputs(targetVals);
-        showVectorVals("Outputs:", myNet.calculate(inputVals,targetVals));
-        showVectorVals("Targets:", targetVals);
-        assert(targetVals.size() == topology.back());
-        std::cout << "Net current error: " << myNet.getError() << std::endl;
-        std::cout << "Net recent average error: " << myNet.getRecentAverageError() << std::endl;
-        if (trainingPass > myNet.learning_iteration_limit() && myNet.getRecentAverageError() < 0.01)
-        {
-            std::cout << std::endl << "average error acceptable -> break" << std::endl;
-            break;
-        }
-    }
-    
-    
-        std::cout << std::endl << "Done" << std::endl;
-
-        /*
-    
-        std::cout << "TEST" << std::endl;
-        std::cout << std::endl;
-
-        unsigned dblarr_test[4][2] = { {0,0}, {0,1}, {1,0}, {1,1} };
-
-        for (unsigned i = 0; i < 4; ++i)
-        {
-            inputVals.clear();
-            inputVals.push_back(dblarr_test[i][0]);
-            inputVals.push_back(dblarr_test[i][1]);
-  
-            showVectorVals("Inputs:", inputVals);
-            showVectorVals("Outputs:",myNet.calculate(inputVals));
-
-            std::cout << std::endl;
-        }
-
-        std::cout << "/TEST" << std::endl;
-        */
+void print_stat(NNetwork& n, std::vector<float> i, std::vector<float> o,std::vector<float> t) {
+              //std::cout << std::endl << "Pass " << trainingPass << std::endl;
+              showVectorVals("Inputs:", i);
+              showVectorVals("Outputs:", o);
+              showVectorVals("Targets:", t);
+              std::cout << "Net current error: " << n.getError() << std::endl;
+              std::cout << "Net recent average error: " << n.getRecentAverageError() << std::endl;
+              std::cout << "------\n\n";
 }
 
-
-void test_learning2()
+/*
+void prepare_study_case()
 {
   
-    std::vector<unsigned> topology;
-    topology.push_back(2);
-    topology.push_back(3);
-    topology.push_back(1);
-    
-    NNetwork myNet(topology);
+  
+  
+  
+
+} */
+
+
+//FIXME
+std::vector<int> convert(int x) {
+  std::vector<int> ret;
+  while(x) {
+    if (x&1)
+      ret.push_back(1);
+    else
+      ret.push_back(0);
+    x>>=1;  
+  }
+  std::reverse(ret.begin(),ret.end());
+  return ret;
+}
+
+std::vector< int > get_bits( unsigned long x ) {
+    std::string chars( std::bitset< 3 >( x )
+        .to_string( char(0), char(1) ) );
+    return std::vector< int >( chars.begin(), chars.end() );
+}
+
+void learn_simple_and(NNetwork& n)
+{
+  
 
     std::vector<float> inputVals, targetVals;
-    inputVals.resize(2);
+    inputVals.resize(3);
     targetVals.resize(1);
     int trainingPass = 0;
+    float acceptable_error = 0.001;
 
     int i = 1;
-    while ( i != 10 ) 
+    while ( i != n.learning_generation_limit() ) 
     {
+          int a = rand()%2;
+          int b = rand()%2;
+          int c = rand()%2;
+          
+          inputVals[0] = (float)a;
+          inputVals[1] = (float)b;
+          inputVals[2] = (float)c; 
+          
+          targetVals[0] = (bool)inputVals[0] && (bool)inputVals[1] && (bool)inputVals[2];
 
-      //int k = 0;
-      //trainingPass = 0;
-     
-      while ( true ) {
-          ++trainingPass;
-          inputVals[0] = i/100;
-          inputVals[1] = i/100;
-          targetVals[0] = inputVals[0]+inputVals[1];
-
-          std::cout << std::endl << "Pass " << trainingPass << std::endl;
-          showVectorVals("Inputs:", inputVals);
-          showVectorVals("Outputs:", myNet.calculate(inputVals,targetVals));
-          showVectorVals("Targets:", targetVals);
-          std::cout << "Net current error: " << myNet.getError() << std::endl;
-          std::cout << "Net recent average error: " << myNet.getRecentAverageError() << std::endl;
-          assert(0);    
-   
-          if (trainingPass > myNet.learning_iteration_limit() && myNet.getRecentAverageError() < 0.01)
-          {
-              std::cout << std::endl << "average error acceptable -> break" << std::endl;
-              //assert(0);
-              ++i;
-              break;
-              
+          while ( true ) {
+              ++trainingPass;
+              n.learn(inputVals,targetVals);
+             // print_stat();
+      
+              if (trainingPass > n.learning_iteration_limit() && n.getRecentAverageError() < acceptable_error)
+              {
+                  //std::cout << std::endl << "average error acceptable -> break" << std::endl;
+                  trainingPass=0;
+                  break;
+              }
           }
-       }
-    
      ++i;
     }
 }
 
 
+void learn_to_sum(NNetwork& n)
+{
+  
+
+    std::vector<float> inputVals, targetVals;
+    inputVals.resize(3);
+    targetVals.resize(3);
+    int trainingPass = 0;
+    float acceptable_error = 0.0001;
+
+    
+    int i = 0;
+    while ( i != n.learning_generation_limit() ) 
+    {
+          //int a = rand()%2;
+          //int b = rand()%2;
+          //int c = rand()%2;
+          
+          int c = rand()%5;
+          //int c = i;
+          int res = c + 1;
+          
+          //std::cout  << c << " " << res << std::endl;
+          std::vector<int> c_bool = get_bits(c);
+          std::vector<int> res_bool = get_bits(res);
+          //showVectorVals("is",c_bool);
+          //showVectorVals("res",res_bool);
+          
+          //assert(0);
+          
+          inputVals[0] = c_bool[c_bool.size()-3];
+          inputVals[1] = c_bool[c_bool.size()-2];
+          inputVals[2] = c_bool[c_bool.size()-1]; 
+          
+          targetVals[0] = res_bool[c_bool.size()-3];
+          targetVals[1] = res_bool[c_bool.size()-2];
+          targetVals[2] = res_bool[c_bool.size()-1];
+
+          while ( true ) {
+              ++trainingPass;
+              n.learn(inputVals,targetVals);
+              //print_stat(n,inputVals,n.learn(inputVals,targetVals),targetVals);
+              //assert(0);
+              if (trainingPass > n.learning_iteration_limit() && n.getRecentAverageError() < acceptable_error)
+              {
+                  //std::cout << std::endl << "average error acceptable -> break" << std::endl;
+                  trainingPass=0;
+                  break;
+              }
+          }
+     ++i;
+    }
+}
+
+
+void execute(NNetwork& n) 
+{
+  
+        //*
+        std::vector<float>  inputVals;
+        std::cout << "TEST" << std::endl;
+        std::cout << std::endl;
+
+        unsigned dblarr_test[8][3] = { {0,0,0}, {0,0,1}, {0,1,0}, {0,1,1}, {1,0,0}, {1,0,1}, {1,1,0}, {1,1,1}  };
+
+        for (unsigned i = 0; i < 8; ++i)
+        {
+            inputVals.clear();
+            inputVals.push_back(dblarr_test[i][0]);
+            inputVals.push_back(dblarr_test[i][1]);
+            inputVals.push_back(dblarr_test[i][2]);
+            
+  
+            showVectorVals("Inputs:", inputVals);
+            showVectorVals("Outputs:",n.calculate(inputVals));
+
+            std::cout << std::endl;
+        }
+
+        std::cout << "/TEST" << std::endl;
+        /**/ 
+  
+}
+
 int main() 
 {
-  //test_learning();
+
+    srand(time(0));
+    std::vector<unsigned> topology;
+    topology.push_back(3);
+    topology.push_back(15);
+    topology.push_back(3);
+    
+    NNetwork myNet(topology);
+
   
-  test_learning2();     
-  return 0;   
+    std::cout << "\n\n Studying, do not disturb! " << std::endl;
+    learn_to_sum(myNet);   
+  
+  
+    
+    std::cout << " Bereq xzarem... " << std::endl;
+    execute(myNet);
+
+return 0;   
 }

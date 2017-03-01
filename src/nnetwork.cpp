@@ -1,6 +1,7 @@
 #include "nnetwork.h"
 
-double NNetwork::k_recentAvgSmoothingFactor = 1000.0; // Number of training samples to average over
+double NNetwork::k_recentAvgSmoothingFactor = 100000.0; // Number of training samples to average over
+int NNetwork::m_generation_limit = 8000;
 
 NNetwork::NNetwork(const std::vector<unsigned>& topology)
     :   m_error(0.0),
@@ -113,7 +114,7 @@ void NNetwork::back_prop(const Vals& targetVals)
 
 
 
-Vals NNetwork::calculate(const Vals& i, const Vals& t) 
+Vals NNetwork::learn(const Vals& i, const Vals& t) 
 {
    
     propogate(i);
@@ -129,3 +130,21 @@ Vals NNetwork::calculate(const Vals& i, const Vals& t)
    
 return resultVals;
 }
+
+
+
+Vals NNetwork::calculate(const Vals& i)
+{
+   
+    propogate(i);
+    
+    Vals resultVals;
+    //resultVals.clear();
+    const Layer& outputLayer = m_layers.back();
+    unsigned total_neuron = (outputLayer.size() - 1);
+    for (unsigned n = 0; n < total_neuron; ++n)
+        resultVals.push_back(outputLayer[n].getOutputVal());
+   
+return resultVals;
+}
+
